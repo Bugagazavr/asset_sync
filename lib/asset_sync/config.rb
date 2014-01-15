@@ -33,6 +33,9 @@ module AssetSync
 
     # Google Storage
     attr_accessor :google_storage_secret_access_key, :google_storage_access_key_id
+    
+    # Openstack Storage
+    attr_accessor :openstack_username, :openstack_api_key, :openstack_auth_url
 
     validates :existing_remote_files, :inclusion => { :in => %w(keep delete ignore) }
 
@@ -104,6 +107,10 @@ module AssetSync
     def google?
       fog_provider == 'Google'
     end
+    
+    def openstack?
+      fog_provider == 'OpenStack'
+    end
 
     def yml_exists?
       defined?(Rails.root) ? File.exists?(self.yml_path) : false
@@ -143,6 +150,9 @@ module AssetSync
       self.rackspace_api_key      = yml["rackspace_api_key"]
       self.google_storage_secret_access_key = yml["google_storage_secret_access_key"]
       self.google_storage_access_key_id     = yml["google_storage_access_key_id"]
+      self.openstack_username     = yml["openstack_username"]
+      self.openstack_api_key      = yml["openstack_api_key"]
+      self.openstack_auth_url     = yml["openstack_auth_url"]
       self.existing_remote_files  = yml["existing_remote_files"] if yml.has_key?("existing_remote_files")
       self.gzip_compression       = yml["gzip_compression"] if yml.has_key?("gzip_compression")
       self.manifest               = yml["manifest"] if yml.has_key?("manifest")
@@ -190,6 +200,12 @@ module AssetSync
         options.merge!({
           :google_storage_secret_access_key => google_storage_secret_access_key,
           :google_storage_access_key_id => google_storage_access_key_id
+        })
+      elsif openstack?
+        options.merge!({
+          :openstack_username => openstack_username,
+          :openstack_api_key => openstack_api_key,
+          :openstack_auth_url => openstack_auth_url
         })
       else
         raise ArgumentError, "AssetSync Unknown provider: #{fog_provider} only AWS and Rackspace are supported currently."
